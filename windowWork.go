@@ -146,9 +146,9 @@ func MakeUIWindow() (GUIhandler *ebitenui.UI) {
 	listWidget := widget.NewList(
 		widget.ListOpts.Entries(dataAsGeneric),
 		widget.ListOpts.EntryLabelFunc(func(e interface{}) string {
-			StateName := "%s"
-			fmt.Sprintf(StateName, e.(State).StateName)
-			return e.(State).StateName
+
+			StateInfo := fmt.Sprintf("%s %d", e.(State).StateName, e.(State).PopChange)
+			return StateInfo
 		}),
 		widget.ListOpts.ScrollContainerOpts(widget.ScrollContainerOpts.Image(resources.image)),
 		widget.ListOpts.SliderOpts(
@@ -160,10 +160,10 @@ func MakeUIWindow() (GUIhandler *ebitenui.UI) {
 		widget.ListOpts.EntryTextPadding(resources.entryPadding),
 		widget.ListOpts.HideHorizontalSlider(),
 		widget.ListOpts.EntrySelectedHandler(func(args *widget.ListEntrySelectedEventArgs) {
-			args.Entry(func(e interface{}) float64{
-				Value := e.(State).ValueWanted
-				return Value
-			})
+			//args.Entry(func(e interface{}) float64{
+			//	Value := e.(State).ValueWanted
+			//	return Value
+			//})
 		}))
 	rootContainer.AddChild(listWidget)
 	textWidget = widget.NewText(textInfo)
@@ -235,7 +235,7 @@ func grabData()[]State{
 	if err != nil {
 		log.Fatalln(err)
 	}
-	sliceOfStates := make([]State,10000)
+	sliceOfStates := make([]State,3200)
 	all_rows, err := excelFile.GetRows("co-est2021-alldata")
 	if err != nil {
 		log.Fatalln(err)
