@@ -9,10 +9,12 @@ import (
 	"github.com/blizzy78/ebitenui/widget"
 	"github.com/hajimehoshi/ebiten/v2"
 	_ "github.com/mattn/go-sqlite3"
+	excelize "github.com/xuri/excelize/v2"
 	"golang.org/x/image/font/basicfont"
 	"image/color"
 	"image/png"
 	"log"
+	"strconv"
 )
 
 var sampleData = map[string]string{
@@ -50,6 +52,7 @@ func main() {
 	if err != nil {
 		log.Fatalln("Error running User Interface Demo", err)
 	}
+	//grabData()
 }
 
 func (g GuiApp) Update() error {
@@ -128,18 +131,24 @@ func MakeUIWindow() (GUIhandler *ebitenui.UI) {
 		log.Println(err)
 	}
 
-	allStudents := loadStudents()
-	dataAsGeneric := make([]interface{}, len(allStudents))
-	for position, student := range allStudents {
-		dataAsGeneric[position] = student
+	//allStudents := loadStudents()
+	//dataAsGeneric := make([]interface{}, len(allStudents))
+	//for position, student := range allStudents {
+	//	dataAsGeneric[position] = student
+	//}
+
+	StateData := grabData()
+	dataAsGeneric := make([]interface{}, len(StateData))
+	for position, state := range StateData{
+		dataAsGeneric[position] = state
 	}
 
 	listWidget := widget.NewList(
 		widget.ListOpts.Entries(dataAsGeneric),
 		widget.ListOpts.EntryLabelFunc(func(e interface{}) string {
-			fullName := "%s %s"
-			fmt.Sprintf(fullName, e.(Student).FirstName, e.(Student).LastName)
-			return e.(Student).LastName
+			StateName := "%s"
+			fmt.Sprintf(StateName, e.(State).StateName)
+			return e.(State).StateName
 		}),
 		widget.ListOpts.ScrollContainerOpts(widget.ScrollContainerOpts.Image(resources.image)),
 		widget.ListOpts.SliderOpts(
@@ -151,7 +160,10 @@ func MakeUIWindow() (GUIhandler *ebitenui.UI) {
 		widget.ListOpts.EntryTextPadding(resources.entryPadding),
 		widget.ListOpts.HideHorizontalSlider(),
 		widget.ListOpts.EntrySelectedHandler(func(args *widget.ListEntrySelectedEventArgs) {
-			//do something when a list item changes
+			args.Entry(func(e interface{}) float64{
+				Value := e.(State).ValueWanted
+				return Value
+			})
 		}))
 	rootContainer.AddChild(listWidget)
 	textWidget = widget.NewText(textInfo)
@@ -216,4 +228,33 @@ func loadStudents() []Student {
 		location++
 	}
 	return sliceOfStudents
+}
+
+func grabData()[]State{
+	excelFile, err := excelize.OpenFile("countyPopChange2020-2021.xlsx")
+	if err != nil {
+		log.Fatalln(err)
+	}
+	sliceOfStates := make([]State,10000)
+	all_rows, err := excelFile.GetRows("co-est2021-alldata")
+	if err != nil {
+		log.Fatalln(err)
+	}
+	for number, row := range all_rows {
+		if number > 0  {
+			if row[5] == sliceOfStates[number-1].StateName {
+				continue
+			}
+		}
+		if row[5] == row[6]{
+			sliceOfStates[number].StateName = row[5]
+			sliceOfStates[number].EstPop21, err = strconv.Atoi(row[9])
+			EstPop := sliceOfStates[number].EstPop21
+			sliceOfStates[number].PopChange, err = strconv.Atoi(row[11])
+			PopChange := sliceOfStates[number].PopChange
+			sliceOfStates[number].ValueWanted = float64(PopChange) / float64(EstPop)
+			//fmt.Println(sliceOfStates[number])
+		}
+	}
+	return sliceOfStates
 }
