@@ -146,7 +146,6 @@ func MakeUIWindow() (GUIhandler *ebitenui.UI) {
 	listWidget := widget.NewList(
 		widget.ListOpts.Entries(dataAsGeneric),
 		widget.ListOpts.EntryLabelFunc(func(e interface{}) string {
-
 			StateInfo := fmt.Sprintf("%s %d", e.(State).StateName, e.(State).PopChange)
 			return StateInfo
 		}),
@@ -160,10 +159,10 @@ func MakeUIWindow() (GUIhandler *ebitenui.UI) {
 		widget.ListOpts.EntryTextPadding(resources.entryPadding),
 		widget.ListOpts.HideHorizontalSlider(),
 		widget.ListOpts.EntrySelectedHandler(func(args *widget.ListEntrySelectedEventArgs) {
-			//args.Entry(func(e interface{}) float64{
-			//	Value := e.(State).ValueWanted
-			//	return Value
-			//})
+
+			message := fmt.Sprintf("Percent change: %d", args.Entry.(State).ValueWanted)
+			textWidget.Label = message
+
 		}))
 	rootContainer.AddChild(listWidget)
 	textWidget = widget.NewText(textInfo)
