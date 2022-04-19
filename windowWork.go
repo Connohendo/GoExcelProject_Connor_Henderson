@@ -146,7 +146,7 @@ func MakeUIWindow() (GUIhandler *ebitenui.UI) {
 	listWidget := widget.NewList(
 		widget.ListOpts.Entries(dataAsGeneric),
 		widget.ListOpts.EntryLabelFunc(func(e interface{}) string {
-			StateInfo := fmt.Sprintf("%s %d", e.(State).StateName, e.(State).PopChange)
+			StateInfo := fmt.Sprintf("%s: Population 2020: %d Population 2021: %d", e.(State).StateName, e.(State).Pop2020, e.(State).Pop2021)
 			return StateInfo
 		}),
 		widget.ListOpts.ScrollContainerOpts(widget.ScrollContainerOpts.Image(resources.image)),
@@ -160,7 +160,7 @@ func MakeUIWindow() (GUIhandler *ebitenui.UI) {
 		widget.ListOpts.HideHorizontalSlider(),
 		widget.ListOpts.EntrySelectedHandler(func(args *widget.ListEntrySelectedEventArgs) {
 
-			message := fmt.Sprintf("Percent change: %d", args.Entry.(State).ValueWanted)
+			message := fmt.Sprintf("Percent change: %f", args.Entry.(State).ValueWanted)
 			textWidget.Label = message
 
 		}))
@@ -230,30 +230,30 @@ func loadStudents() []Student {
 }
 
 func grabData()[]State{
+	sliceOfStates := make([]State, 51, 55)
 	excelFile, err := excelize.OpenFile("countyPopChange2020-2021.xlsx")
 	if err != nil {
 		log.Fatalln(err)
 	}
-	sliceOfStates := make([]State,3200)
 	all_rows, err := excelFile.GetRows("co-est2021-alldata")
 	if err != nil {
 		log.Fatalln(err)
 	}
+	location := 0
 	for number, row := range all_rows {
-		if number > 0  {
-			if row[5] == sliceOfStates[number-1].StateName {
-				continue
-			}
+		if number < 1 || number == 330 {
+			continue
 		}
 		if row[5] == row[6]{
-			sliceOfStates[number].StateName = row[5]
-			sliceOfStates[number].EstPop21, err = strconv.Atoi(row[9])
-			EstPop := sliceOfStates[number].EstPop21
-			sliceOfStates[number].PopChange, err = strconv.Atoi(row[11])
-			PopChange := sliceOfStates[number].PopChange
-			sliceOfStates[number].ValueWanted = float64(PopChange) / float64(EstPop)
-			//fmt.Println(sliceOfStates[number])
+			StateName:= row[5]
+			PopEst21, _:= strconv.Atoi(row[9])
+			PopChange, _ := strconv.Atoi(row[11])
+			PopEst20, _ := strconv.Atoi(row[8])
+			PercentChange := (float64(PopChange) / float64(PopEst21)) *100
+			currentState := State{StateName, PopChange, PopEst20, PopEst21, PercentChange}
+			sliceOfStates[location] = currentState
+			location++
 		}
-	}
+		}
 	return sliceOfStates
 }

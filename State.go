@@ -2,8 +2,9 @@ package main
 
 type State struct {
 	StateName string
-	EstPop21  int
 	PopChange   int
+	Pop2020 int
+	Pop2021 int
 	ValueWanted float64
 }
 
